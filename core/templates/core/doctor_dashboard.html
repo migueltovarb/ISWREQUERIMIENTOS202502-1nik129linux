@@ -1,0 +1,132 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2> Doctor Dashboard</h2>
+            <p class="text-muted">Welcome back, Dr. {{ user.last_name }}</p>
+        </div>
+        <span class="badge bg-light text-dark border p-2">{% now "D, d M Y" %}</span>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-info alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card shadow border-0">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table align-middle table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Time</th>
+                            <th>Patient Name</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appt in appointments %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ appt.time }}</div>
+                                <small class="text-muted">{{ appt.date }}</small>
+                            </td>
+                            <td>
+                                {{ appt.patient.user.first_name }} {{ appt.patient.user.last_name }}<br>
+                                <small class="text-muted">📞 {{ appt.patient.phone }}</small>
+                            </td>
+                            <td>{{ appt.reason|truncatechars:30 }}</td>
+                            <td>
+                                {% if appt.status == 'pending' %}
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                {% elif appt.status == 'confirmed' %}
+                                    <span class="badge bg-primary">Confirmed</span>
+                                {% elif appt.status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Cancelled</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <!-- PENDING ACTIONS -->
+                                {% if appt.status == 'pending' %}
+                                    <form action="{% url 'update_appointment' appt.id %}" method="POST" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" name="status" value="confirmed" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-check-lg"></i> Confirm
+                                        </button>
+                                        <button type="submit" name="status" value="cancelled" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </form>
+                                
+                                <!-- CONFIRMED ACTIONS (Finish Visit) -->
+                                {% elif appt.status == 'confirmed' %}
+                                    <!-- Trigger Modal -->
+                                    <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#finishModal{{ appt.id }}">
+                                        <i class="bi bi-clipboard-pulse"></i> Finish Visit
+                                    </button>
+
+                                    <!-- THE MODAL (Pop-up for Diagnosis) -->
+                                    <div class="modal fade" id="finishModal{{ appt.id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header bg-success text-white">
+                                                    <h5 class="modal-title">Complete Visit</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <form action="{% url 'update_appointment' appt.id %}" method="POST">
+                                                    {% csrf_token %}
+                                                    <div class="modal-body">
+                                                        <p><strong>Patient:</strong> {{ appt.patient.user.first_name }} {{ appt.patient.user.last_name }}</p>
+                                                        
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-bold">Medical Diagnosis</label>
+                                                            <textarea name="diagnosis" class="form-control" rows="2" placeholder="e.g. Acute Bronchitis" required></textarea>
+                                                        </div>
+                                                        
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-bold">Prescription / Treatment</label>
+                                                            <textarea name="prescription" class="form-control" rows="3" placeholder="e.g. Ibuprofen 400mg twice daily..." required></textarea>
+                                                        </div>
+                                                        
+                                                        <!-- Hidden input to set status -->
+                                                        <input type="hidden" name="status" value="completed">
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                        <button type="submit" class="btn btn-success">Save & Complete</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- End Modal -->
+
+                                {% else %}
+                                    <span class="text-muted small">Archived</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <h5>No appointments today.</h5>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

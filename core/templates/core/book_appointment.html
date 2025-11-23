@@ -1,0 +1,91 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            
+            <!-- Alerts Area (For Validation Errors like "Weekend" or "Busy") -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                        <i class="bi bi-exclamation-circle-fill me-2"></i> {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="card shadow border-0 rounded-4">
+                <div class="card-header bg-white border-0 pt-4 px-4 text-center">
+                    <div class="mb-2">
+                        <span class="bg-primary bg-opacity-10 text-primary rounded-circle p-3 d-inline-flex">
+                            <i class="bi bi-calendar-event fs-3"></i>
+                        </span>
+                    </div>
+                    <!-- DYNAMIC TITLE: Changes if editing or booking new -->
+                    <h4 class="fw-bold text-primary mb-0">
+                        {% if is_edit %} 
+                            Modify Appointment 
+                        {% else %} 
+                            Book a Medical Visit 
+                        {% endif %}
+                    </h4>
+                    <p class="text-muted small">
+                        {% if is_edit %} 
+                            Change your date or doctor below. 
+                        {% else %} 
+                            Select a specialist and choose a time slot. 
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="card-body p-4">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <!-- Doctor Selection -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Select Doctor</label>
+                            {{ form.doctor }}
+                            <div class="form-text small">Filter by specialty in the search page if needed.</div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Date Picker -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Date</label>
+                                {{ form.date }}
+                                <div class="form-text small text-danger">Mon - Fri only</div>
+                            </div>
+                            <!-- Time Picker -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Time</label>
+                                {{ form.time }}
+                                <div class="form-text small text-danger">8:00 AM - 6:00 PM</div>
+                            </div>
+                        </div>
+
+                        <!-- Reason Textarea -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Reason for Visit</label>
+                            {{ form.reason }}
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow-sm">
+                                {% if is_edit %} 
+                                    Save Changes 
+                                {% else %} 
+                                    Confirm Booking 
+                                {% endif %}
+                            </button>
+                            <a href="/dashboard" class="btn btn-light btn-lg rounded-pill text-muted">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
